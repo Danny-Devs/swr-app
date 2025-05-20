@@ -1,47 +1,32 @@
 <script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
-import TheWelcome from './components/TheWelcome.vue'
+// Import the SWRV composable for data fetching and caching
+import useSWRV from 'swrv'
+
+// Define a fetcher function that fetches JSON data from a given URL
+const fetcher = (url: string) => fetch(url).then((res) => res.json())
+
+// Use SWRV to fetch articles from the backend
+// The key '/articles' matches the Vite proxy config (or use full URL if not proxying)
+// data, error, and isValidating are Vue refs
+const { data, error, isValidating } = useSWRV('/articles', fetcher)
 </script>
 
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="./assets/logo.svg" width="125" height="125" />
+  <div>
+    <!-- Show loading state while fetching data -->
+    <p v-if="isValidating">Loading...</p>
+    <!-- Show error message if fetch fails -->
+    <p v-else-if="error">Error: {{ error.message }}</p>
 
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
-    </div>
-  </header>
-
-  <main>
-    <TheWelcome />
-  </main>
+    <!-- Render the list of articles once data is loaded -->
+    <ul v-else>
+      <!-- Guard against undefined data; fallback to empty array -->
+      <li v-for="article in data?.value || []" :key="article.id">
+        <!-- Link to the article (opens in new tab) -->
+        <a :href="article.link" target="_blank">{{ article.title }}</a>
+      </li>
+    </ul>
+  </div>
 </template>
 
-<style scoped>
-header {
-  line-height: 1.5;
-}
-
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-}
-</style>
+<style scoped></style>
